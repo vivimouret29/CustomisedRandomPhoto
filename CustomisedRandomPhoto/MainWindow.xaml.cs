@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.IO;
+﻿using System.Collections.ObjectModel;
 using System.Net;
+using System.Threading;
 using System.Windows;
+using Microsoft.Win32;
 
 using CustomisedRandomPhoto.ViewBinding;
 
@@ -14,32 +13,28 @@ namespace CustomisedRandomPhoto
     /// </summary>
     public partial class MainWindow : Window
     {
-        private readonly string webRequest = "https://source.unsplash.com/random";
+        private readonly string webRequest =
+            "https://source.unsplash.com/random";
 
-        //private readonly BindingMainWindows bindingMainWindows =
-        //    new BindingMainWindows();
-
-        public ObservableCollection<string> Images =
-            new ObservableCollection<string> { };
+        private readonly ObservableCollection<BindingMainWindows> Images =
+            new ObservableCollection<BindingMainWindows> { };
 
         public MainWindow()
         {
             InitializeComponent();
+            WindowStartupLocation =
+                WindowStartupLocation.CenterScreen;
 
             this.DisplayListImage();
 
-            //this.DataContext = bindingMainWindows;
-            observableCollection.ItemsSource = Images;
+            ListImageUri.ItemsSource = this.Images;
         }
 
         /// <summary>
         /// Calls each time the url link
         /// </summary>
-        /// <returns></returns>
         private string LoadOneNewImage()
         {
-            //response.ResponseUri.AbsoluteUri
-
             HttpWebRequest request = WebRequest.Create(webRequest) as HttpWebRequest;
             using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
             {
@@ -52,26 +47,33 @@ namespace CustomisedRandomPhoto
         /// </summary>
         private void DisplayListImage()
         {
-            ObservableCollection<string> imageValue =
-                new ObservableCollection<string> { };
-
             for (int i = 0; i < 10; i++)
             {
-                //Images.Add(new ListImages() { Uri = this.LoadOneNewImage() } );
-                Images.Add(this.LoadOneNewImage());
+                Images.Add(item: new BindingMainWindows() { ImageUri = this.LoadOneNewImage() });
+                Thread.Sleep(1000);
             }
-
-            observableCollection.ItemsSource = Images;
-            //bindingMainWindows.ImageUri = imageValue;
         }
 
-    }
-    public class ListImages
-    {
-        public string Uri
+        /// <summary>
+        /// Interaction to download an image from local
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void FindLocalImage(object sender, RoutedEventArgs e)
         {
-            get;
-            set;
+            OpenFileDialog openFileDialog =
+                new OpenFileDialog
+                {
+                    Title = "Select a picture",
+                    Filter = "All supported graphics|*.jpg;*.jpeg;*.png|" +
+              "JPEG (*.jpg;*.jpeg)|*.jpg;*.jpeg|" +
+              "Portable Network Graphic (*.png)|*.png"
+                };
+
+            if ((bool)openFileDialog.ShowDialog())
+            {
+                this.Images.Insert(0, item: new BindingMainWindows() { ImageUri = openFileDialog.FileName });
+            }
         }
     }
 }
